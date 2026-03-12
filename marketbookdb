@@ -1,0 +1,264 @@
+import { useState, useMemo } from "react";
+
+const C = {
+  green:"#1a6b3c", greenLight:"#2d9158", greenFade:"rgba(26,107,60,0.08)",
+  gold:"#e8a020", goldFade:"rgba(232,160,32,0.1)",
+  cream:"#faf6ef", dark:"#0f1f13", text:"#2a3d2e", muted:"#6b7f6e",
+  white:"#fff", red:"#d94040", redFade:"rgba(217,64,64,0.08)",
+  border:"rgba(26,107,60,0.1)",
+};
+const fmt = n => "₦" + Number(n||0).toLocaleString("en-NG");
+const today = () => new Date().toISOString().split("T")[0];
+const getWeek = d => { const dt=new Date(d); dt.setDate(dt.getDate()-dt.getDay()); return dt.toISOString().split("T")[0]; };
+const getMonth = d => d.slice(0,7);
+
+const Logo = ({size=40}) => (
+  <svg width={size} height={size} viewBox="0 0 100 100">
+    <defs>
+      <linearGradient id="lg1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#0f2d1a"/><stop offset="100%" stopColor="#1a6b3c"/></linearGradient>
+      <linearGradient id="lg2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#f5c04a"/><stop offset="100%" stopColor="#e8a020"/></linearGradient>
+    </defs>
+    <rect width="100" height="100" rx="22" fill="url(#lg1)"/>
+    <path d="M50 20 C50 20 25 22 18 30 L18 72 C25 65 50 67 50 67 Z" fill="white" opacity="0.95"/>
+    <path d="M50 20 C50 20 75 22 82 30 L82 72 C75 65 50 67 50 67 Z" fill="white" opacity="0.82"/>
+    <rect x="46" y="18" width="8" height="52" rx="2.5" fill="url(#lg2)"/>
+    <rect x="58" y="44" width="6" height="18" rx="2" fill="#1a6b3c" opacity="0.5"/>
+    <rect x="67" y="37" width="6" height="25" rx="2" fill="#1a6b3c" opacity="0.7"/>
+    <rect x="76" y="28" width="6" height="34" rx="2" fill="url(#lg2)" opacity="0.9"/>
+    <path d="M50 30 L50 14" stroke="url(#lg2)" strokeWidth="2.5" strokeLinecap="round"/>
+    <path d="M45 20 L50 13 L55 20" stroke="url(#lg2)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+  </svg>
+);
+
+const Icon = ({name,size=20,color="currentColor"}) => {
+  const p = {width:size,height:size,fill:"none",stroke:color,strokeWidth:"2",viewBox:"0 0 24 24"};
+  const icons = {
+    dashboard:<svg {...p}><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>,
+    sales:<svg {...p}><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>,
+    expense:<svg {...p}><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>,
+    debt:<svg {...p}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+    report:<svg {...p}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>,
+    plus:<svg {...p} strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>,
+    trash:<svg {...p}><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>,
+    check:<svg {...p} strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>,
+    up:<svg {...p}><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>,
+    down:<svg {...p}><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>,
+  };
+  return icons[name]||null;
+};
+
+function Modal({open,onClose,title,children}) {
+  if(!open) return null;
+  return (
+    <div onClick={onClose} style={{position:"fixed",inset:0,zIndex:1000,background:"rgba(15,31,19,0.65)",backdropFilter:"blur(4px)",display:"flex",alignItems:"flex-end",justifyContent:"center"}}>
+      <div onClick={e=>e.stopPropagation()} style={{background:C.cream,borderRadius:"24px 24px 0 0",padding:"2rem 1.5rem 2.5rem",width:"100%",maxWidth:480,animation:"slideUp 0.3s ease",maxHeight:"88vh",overflowY:"auto"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"1.4rem"}}>
+          <span style={{fontFamily:"Georgia,serif",fontSize:"1.15rem",fontWeight:700,color:C.dark}}>{title}</span>
+          <button onClick={onClose} style={{background:"none",border:"none",fontSize:"1.4rem",cursor:"pointer",color:C.muted}}>✕</button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function FInput({label,type="text",...props}) {
+  return (
+    <div style={{marginBottom:"1rem"}}>
+      {label&&<label style={{display:"block",fontSize:"0.76rem",fontWeight:600,color:C.muted,marginBottom:"0.35rem",textTransform:"uppercase",letterSpacing:"0.05em"}}>{label}</label>}
+      <input {...props} type={type} style={{width:"100%",padding:"0.78rem 1rem",border:"2px solid rgba(26,107,60,0.15)",borderRadius:12,background:C.white,fontFamily:"inherit",fontSize:"0.95rem",color:C.text,outline:"none",transition:"border-color 0.2s",boxSizing:"border-box",...props.style}}
+        onFocus={e=>e.target.style.borderColor=C.green} onBlur={e=>e.target.style.borderColor="rgba(26,107,60,0.15)"}/>
+    </div>
+  );
+}
+
+function Btn({children,variant="primary",onClick,style={},small,full,loading}) {
+  const v={primary:{background:C.green,color:"#fff",boxShadow:"0 4px 14px rgba(26,107,60,0.25)"},gold:{background:C.gold,color:"#fff",boxShadow:"0 4px 14px rgba(232,160,32,0.25)"},ghost:{background:C.greenFade,color:C.green},danger:{background:C.redFade,color:C.red}};
+  return (
+    <button onClick={onClick} disabled={loading} style={{border:"none",borderRadius:100,cursor:"pointer",fontFamily:"inherit",fontWeight:600,transition:"all 0.2s",display:"inline-flex",alignItems:"center",gap:"0.4rem",padding:small?"0.45rem 0.9rem":"0.85rem 1.5rem",fontSize:small?"0.79rem":"0.93rem",width:full?"100%":"auto",justifyContent:full?"center":"flex-start",opacity:loading?0.7:1,...v[variant],...style}}
+      onMouseEnter={e=>e.currentTarget.style.transform="translateY(-1px)"} onMouseLeave={e=>e.currentTarget.style.transform="translateY(0)"}>
+      {children}
+    </button>
+  );
+}
+
+function Card({children,style={}}) { return <div style={{background:C.white,borderRadius:18,border:`1px solid ${C.border}`,overflow:"hidden",...style}}>{children}</div>; }
+function Row({children,style={}}) { return <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",...style}}>{children}</div>; }
+
+function TotalBanner({sales,expenses,label}) {
+  const s=sales.reduce((a,x)=>a+Number(x.amount),0);
+  const e=expenses.reduce((a,x)=>a+Number(x.amount),0);
+  const p=s-e; const good=p>=0;
+  return (
+    <div style={{background:good?C.green:C.red,borderRadius:18,padding:"1.3rem 1.5rem",marginBottom:"1.1rem",boxShadow:`0 6px 22px ${good?"rgba(26,107,60,0.22)":"rgba(217,64,64,0.18)"}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+      <div>
+        <div style={{fontSize:"0.68rem",color:"rgba(255,255,255,0.65)",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:"0.15rem"}}>{label}</div>
+        <div style={{fontFamily:"Georgia,serif",fontSize:"1.9rem",fontWeight:700,color:"#fff",lineHeight:1,marginBottom:"0.35rem"}}>{fmt(p)}</div>
+        <div style={{fontSize:"0.68rem",color:"rgba(255,255,255,0.55)"}}>Sales {fmt(s)} · Exp {fmt(e)}</div>
+      </div>
+      <div style={{opacity:0.25}}><Icon name={good?"up":"down"} size={32} color="#fff"/></div>
+    </div>
+  );
+}
+
+function Dashboard({data,setTab}) {
+  const todaySales=data.sales.filter(s=>s.date===today());
+  const todayExp=data.expenses.filter(e=>e.date===today());
+  const owedToMe=data.debts.filter(d=>!d.paid&&d.type==="owed_to_me").reduce((a,d)=>a+Number(d.amount),0);
+  const hr=new Date().getHours();
+  const weekSales=useMemo(()=>{
+    const days={};
+    for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);days[d.toISOString().split("T")[0]]=0;}
+    data.sales.forEach(s=>{if(days[s.date]!==undefined)days[s.date]+=Number(s.amount);});
+    return Object.entries(days).map(([date,amount])=>({date:date.slice(5),amount,isToday:date===today()}));
+  },[data.sales]);
+  const maxSale=Math.max(...weekSales.map(d=>d.amount),1);
+  const recent=[...data.sales].sort((a,b)=>b.id-a.id).slice(0,3);
+  const tSales=todaySales.reduce((a,s)=>a+Number(s.amount),0);
+  const tExp=todayExp.reduce((a,e)=>a+Number(e.amount),0);
+
+  return (
+    <div>
+      <div style={{marginBottom:"1.2rem"}}>
+        <div style={{fontSize:"0.74rem",color:C.muted}}>{new Date().toLocaleDateString("en-NG",{weekday:"long",day:"numeric",month:"long"})}</div>
+        <h2 style={{fontFamily:"Georgia,serif",fontSize:"1.4rem",fontWeight:700,color:C.dark}}>{hr<12?"Good morning":hr<17?"Good afternoon":"Good evening"} 👋</h2>
+      </div>
+      <TotalBanner sales={todaySales} expenses={todayExp} label="Today's Net Profit"/>
+      <div style={{display:"flex",gap:"0.65rem",marginBottom:"1.1rem",overflowX:"auto"}}>
+        {[{l:"Sales",v:fmt(tSales),i:"🛒",s:`${todaySales.length} items`},{l:"Expenses",v:fmt(tExp),i:"💸",s:`${todayExp.length} items`},{l:"Owed to Me",v:fmt(owedToMe),i:"🤝",s:"unpaid"}].map(x=>(
+          <div key={x.l} style={{background:C.white,borderRadius:14,padding:"0.9rem",border:`1px solid ${C.border}`,flex:1,minWidth:95}}>
+            <div style={{fontSize:"1rem",marginBottom:"0.25rem"}}>{x.i}</div>
+            <div style={{fontSize:"0.64rem",color:C.muted,fontWeight:600,textTransform:"uppercase",letterSpacing:"0.05em"}}>{x.l}</div>
+            <div style={{fontFamily:"Georgia,serif",fontSize:"1.05rem",fontWeight:700,color:C.dark}}>{x.v}</div>
+            <div style={{fontSize:"0.64rem",color:C.muted}}>{x.s}</div>
+          </div>
+        ))}
+      </div>
+      <Card style={{padding:"1.2rem",marginBottom:"1.1rem"}}>
+        <Row style={{marginBottom:"0.9rem"}}><span style={{fontWeight:700,fontSize:"0.85rem",color:C.dark}}>7-Day Sales</span><span style={{fontSize:"0.7rem",color:C.muted}}>This week</span></Row>
+        <div style={{display:"flex",alignItems:"flex-end",gap:"0.3rem",height:68}}>
+          {weekSales.map((d,i)=>(
+            <div key={i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:"0.22rem"}}>
+              <div style={{width:"100%",borderRadius:"4px 4px 0 0",height:Math.max((d.amount/maxSale)*58,d.amount>0?5:2),background:d.isToday?`linear-gradient(to top,${C.green},${C.greenLight})`:d.amount>0?C.greenFade:"rgba(0,0,0,0.05)",transition:"height 0.5s"}}/>
+              <span style={{fontSize:"0.56rem",color:d.isToday?C.green:C.muted,fontWeight:d.isToday?700:400}}>{d.date.slice(3)}</span>
+            </div>
+          ))}
+        </div>
+      </Card>
+      <Card style={{padding:"1.1rem",marginBottom:"1.2rem"}}>
+        <Row style={{marginBottom:"0.8rem"}}><span style={{fontWeight:700,fontSize:"0.85rem",color:C.dark}}>Recent Sales</span><button onClick={()=>setTab("sales")} style={{background:"none",border:"none",color:C.green,fontSize:"0.76rem",fontWeight:700,cursor:"pointer"}}>See all →</button></Row>
+        {recent.length===0
+          ? <div style={{textAlign:"center",padding:"1rem",color:C.muted,fontSize:"0.81rem"}}>No sales yet — add your first!</div>
+          : recent.map((s,i)=>(
+            <div key={s.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"0.55rem 0",borderBottom:i<recent.length-1?`1px solid rgba(26,107,60,0.06)`:"none"}}>
+              <div><div style={{fontWeight:600,fontSize:"0.86rem",color:C.dark}}>{s.item}</div><div style={{fontSize:"0.68rem",color:C.muted}}>{s.date}</div></div>
+              <span style={{fontWeight:700,color:C.green,fontSize:"0.88rem"}}>{fmt(s.amount)}</span>
+            </div>
+          ))}
+      </Card>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0.65rem"}}>
+        <Btn onClick={()=>setTab("sales")} style={{justifyContent:"center",borderRadius:14}}><Icon name="plus" size={14} color="#fff"/>Add Sale</Btn>
+        <Btn variant="gold" onClick={()=>setTab("report")} style={{justifyContent:"center",borderRadius:14}}><Icon name="report" size={14} color="#fff"/>Report</Btn>
+      </div>
+    </div>
+  );
+}
+
+function Sales({data,setData}) {
+  const [modal,setModal]=useState(false);
+  const [form,setForm]=useState({item:"",amount:"",qty:"1",date:today()});
+  const add=()=>{if(!form.item||!form.amount)return;setData(d=>({...d,sales:[{...form,id:Date.now()},...d.sales]}));setForm({item:"",amount:"",qty:"1",date:today()});setModal(false);};
+  const remove=id=>setData(d=>({...d,sales:d.sales.filter(s=>s.id!==id)}));
+  const totalAll=data.sales.reduce((a,s)=>a+Number(s.amount),0);
+  const totalToday=data.sales.filter(s=>s.date===today()).reduce((a,s)=>a+Number(s.amount),0);
+  const totalMonth=data.sales.filter(s=>s.date&&s.date.startsWith(today().slice(0,7))).reduce((a,s)=>a+Number(s.amount),0);
+  const grouped=data.sales.reduce((acc,s)=>{if(s.date){(acc[s.date]=acc[s.date]||[]).push(s);}return acc;},{});
+  const sortedDates=Object.keys(grouped).sort((a,b)=>b.localeCompare(a));
+  return (
+    <div>
+      <Row style={{marginBottom:"1.1rem"}}>
+        <div><h2 style={{fontFamily:"Georgia,serif",fontSize:"1.45rem",fontWeight:700,color:C.dark}}>Sales</h2><div style={{fontSize:"0.76rem",color:C.muted}}>Today <strong style={{color:C.green}}>{fmt(totalToday)}</strong></div></div>
+        <Btn onClick={()=>setModal(true)} small><Icon name="plus" size={13} color="#fff"/>Add</Btn>
+      </Row>
+      {data.sales.length>0&&(
+        <div style={{display:"flex",gap:"0.65rem",marginBottom:"1.1rem"}}>
+          {[{l:"All-Time",v:fmt(totalAll),c:C.green,bg:C.greenFade},{l:"This Month",v:fmt(totalMonth),c:C.gold,bg:C.goldFade}].map(x=>(
+            <div key={x.l} style={{flex:1,background:x.bg,borderRadius:14,padding:"0.85rem 1rem"}}>
+              <div style={{fontSize:"0.65rem",color:x.c,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.05em"}}>{x.l}</div>
+              <div style={{fontFamily:"Georgia,serif",fontSize:"1.25rem",fontWeight:700,color:x.c}}>{x.v}</div>
+            </div>
+          ))}
+        </div>
+      )}
+      {sortedDates.length===0
+        ? <div style={{textAlign:"center",padding:"4rem 1rem",color:C.muted}}><div style={{fontSize:"2.8rem",marginBottom:"0.7rem"}}>🛒</div><div style={{fontWeight:600}}>No sales yet</div><div style={{fontSize:"0.81rem",marginTop:"0.3rem"}}>Tap Add to record your first sale</div></div>
+        : sortedDates.map(date=>{
+          const dayTotal=grouped[date].reduce((a,s)=>a+Number(s.amount),0);
+          return (
+            <div key={date} style={{marginBottom:"1.2rem"}}>
+              <Row style={{marginBottom:"0.38rem"}}><span style={{fontSize:"0.7rem",fontWeight:700,color:C.muted,textTransform:"uppercase",letterSpacing:"0.06em"}}>{date===today()?"Today":new Date(date).toLocaleDateString("en-NG",{weekday:"short",day:"numeric",month:"short"})}</span><span style={{fontSize:"0.76rem",fontWeight:700,color:C.green}}>{fmt(dayTotal)}</span></Row>
+              <Card>{grouped[date].map((s,i)=>(
+                <div key={s.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"0.82rem 1rem",borderBottom:i<grouped[date].length-1?`1px solid rgba(26,107,60,0.06)`:"none"}}>
+                  <div><div style={{fontWeight:600,fontSize:"0.86rem",color:C.dark}}>{s.item}</div>{s.qty>1&&<div style={{fontSize:"0.68rem",color:C.muted}}>Qty: {s.qty}</div>}</div>
+                  <div style={{display:"flex",alignItems:"center",gap:"0.65rem"}}><span style={{fontWeight:700,color:C.green,fontSize:"0.88rem"}}>{fmt(s.amount)}</span><button onClick={()=>remove(s.id)} style={{background:"none",border:"none",cursor:"pointer",color:C.muted,display:"flex"}}><Icon name="trash" size={14}/></button></div>
+                </div>
+              ))}</Card>
+            </div>
+          );
+        })
+      }
+      <Modal open={modal} onClose={()=>setModal(false)} title="Record a Sale">
+        <FInput label="Item / Product" placeholder="e.g. Groundnuts, Tomatoes..." value={form.item} onChange={e=>setForm(f=>({...f,item:e.target.value}))}/>
+        <FInput label="Amount (₦)" type="number" placeholder="0" value={form.amount} onChange={e=>setForm(f=>({...f,amount:e.target.value}))}/>
+        <FInput label="Quantity" type="number" placeholder="1" value={form.qty} onChange={e=>setForm(f=>({...f,qty:e.target.value}))}/>
+        <FInput label="Date" type="date" value={form.date} onChange={e=>setForm(f=>({...f,date:e.target.value}))}/>
+        <Btn onClick={add} full style={{borderRadius:12}}><Icon name="check" size={15} color="#fff"/>Save Sale</Btn>
+      </Modal>
+    </div>
+  );
+}
+
+function Expenses({data,setData}) {
+  const [modal,setModal]=useState(false);
+  const [form,setForm]=useState({item:"",amount:"",category:"Restock",date:today()});
+  const cats=["Restock","Transport","Market Fee","Food","Other"];
+  const catColors={Restock:C.green,Transport:C.gold,"Market Fee":C.greenLight,Food:C.red,Other:C.muted};
+  const add=()=>{if(!form.item||!form.amount)return;setData(d=>({...d,expenses:[{...form,id:Date.now()},...d.expenses]}));setForm({item:"",amount:"",category:"Restock",date:today()});setModal(false);};
+  const remove=id=>setData(d=>({...d,expenses:d.expenses.filter(e=>e.id!==id)}));
+  const totalAll=data.expenses.reduce((a,e)=>a+Number(e.amount),0);
+  const totalToday=data.expenses.filter(e=>e.date===today()).reduce((a,e)=>a+Number(e.amount),0);
+  const totalMonth=data.expenses.filter(e=>e.date&&e.date.startsWith(today().slice(0,7))).reduce((a,e)=>a+Number(e.amount),0);
+  const grouped=data.expenses.reduce((acc,e)=>{if(e.date){(acc[e.date]=acc[e.date]||[]).push(e);}return acc;},{});
+  const sortedDates=Object.keys(grouped).sort((a,b)=>b.localeCompare(a));
+  const catTotals=cats.map(c=>({cat:c,total:data.expenses.filter(e=>e.category===c).reduce((a,e)=>a+Number(e.amount),0)})).filter(x=>x.total>0);
+  return (
+    <div>
+      <Row style={{marginBottom:"1.1rem"}}>
+        <div><h2 style={{fontFamily:"Georgia,serif",fontSize:"1.45rem",fontWeight:700,color:C.dark}}>Expenses</h2><div style={{fontSize:"0.76rem",color:C.muted}}>Today <strong style={{color:C.red}}>{fmt(totalToday)}</strong></div></div>
+        <Btn onClick={()=>setModal(true)} small variant="ghost"><Icon name="plus" size={13} color={C.green}/>Add</Btn>
+      </Row>
+      {data.expenses.length>0&&(
+        <>
+          <div style={{display:"flex",gap:"0.65rem",marginBottom:"1rem"}}>
+            {[{l:"All-Time",v:fmt(totalAll),c:C.red,bg:C.redFade},{l:"This Month",v:fmt(totalMonth),c:C.gold,bg:C.goldFade}].map(x=>(
+              <div key={x.l} style={{flex:1,background:x.bg,borderRadius:14,padding:"0.85rem 1rem"}}>
+                <div style={{fontSize:"0.65rem",color:x.c,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.05em"}}>{x.l}</div>
+                <div style={{fontFamily:"Georgia,serif",fontSize:"1.25rem",fontWeight:700,color:x.c}}>{x.v}</div>
+              </div>
+            ))}
+          </div>
+          {catTotals.length>0&&(
+            <Card style={{padding:"1.1rem",marginBottom:"1.1rem"}}>
+              <div style={{fontSize:"0.68rem",fontWeight:700,color:C.muted,textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:"0.7rem"}}>By Category</div>
+              {catTotals.map(x=>(
+                <div key={x.cat} style={{marginBottom:"0.55rem"}}>
+                  <Row style={{marginBottom:"0.18rem"}}><span style={{fontSize:"0.78rem",color:C.text}}>{x.cat}</span><span style={{fontSize:"0.76rem",fontWeight:700,color:catColors[x.cat]}}>{fmt(x.total)}</span></Row>
+                  <div style={{height:5,borderRadius:3,background:"rgba(0,0,0,0.06)"}}><div style={{height:"100%",borderRadius:3,background:catColors[x.cat],width:`${(x.total/totalAll)*100}%`,transition:"width 0.5s"}}/></div>
+                </div>
+              ))}
+            </Card>
+          )}
+        </>
+      )}
+      {sortedDates.length===0
+        ? <div style={{textAlign:"center",padding:"4rem 1rem",color:C.muted}}><div style={{fontSize:"2.8rem",marginBott
