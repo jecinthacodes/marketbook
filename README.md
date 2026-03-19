@@ -12,4 +12,4 @@ Deploy directly to GitHub Pages.
 - Responsive (mobile + desktop)
 - 
 This repo is live at:
-https://jecinthacodes.github.io/marketbook-landing
+https://jecinthacodes.github.io/marketbook
